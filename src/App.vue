@@ -325,7 +325,7 @@ export default {
         {
           name: 'ct-3.5',
           model: 'g-3.5-turbo',
-          url: '/app/c-3.5'
+          url: '/app/ct-3.5'
         },
         {
           name: 'h-4',
