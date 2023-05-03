@@ -6,7 +6,7 @@
     }"
   >
     <div class="page-title">
-      <h1>🤖 DaVinci GPT-3</h1>
+      <h1></h1>
     </div>
     <div v-show="!isLogin && !checkingLogin">
       <div style="line-height: 1.9">
