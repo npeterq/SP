@@ -9,7 +9,7 @@ let models = {
     name: 'text-davinci-003',
     info: 'Complex intent, cause and effect, summarization for audience'
   },
-  'ct-3.5': {
+  'chat-3.5': {
     oneDollarTokenForPrompt: 1 / 0.002 * 1000,
     oneDollarTokenForCompletion: 1 / 0.002 * 1000,
     name: 'gpt-3.5-turbo',
