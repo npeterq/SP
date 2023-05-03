@@ -194,7 +194,7 @@ AI: `,
   })
 })
 
-app.post('/api/chat/:model', function (req, res) {
+app.post('/api/app/:model', function (req, res) {
   res.set('Content-Type', 'application/octet-stream')
   res.set('Transfer-Encoding', 'chunked')
 
