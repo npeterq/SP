@@ -1,7 +1,7 @@
 <template>
   <div v-show="!pageLoading" style="display: none">
     <div class="page-title">
-      <h1>🤖 DaVinci GPT-3</h1>
+      <h1></h1>
     </div>
 
     <div v-show="notFound">

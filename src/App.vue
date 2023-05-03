@@ -323,16 +323,15 @@ export default {
           url: '/ask'
         },
         {
-          name: 'ChatGPT',
+          name: 'chat-3.5',
           model: 'gpt-3.5-turbo',
-          url: '/chat/chat-gpt'
+          url: '/chat/chat-3.5'
         },
-        // {
-        //   name: 'GPT-4 8k',
-        //   model: 'gpt-4',
-        //   url: '/chat/gpt-4',
-        //   disabled: true
-        // },
+        {
+          name: 'GPT-4 8k',
+          model: 'gpt-4',
+          url: '/chat/gpt-4'
+        }
         // {
         //   name: 'GPT-4 32k',
         //   model: 'gpt-4-32k',

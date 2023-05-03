@@ -101,11 +101,11 @@ function chat(m, options, cb) {
   let openai = new OpenAIApi(configuration)
 
   let models = {
-    'chat-gpt': {
+    'chat-3.5': {
       name: 'gpt-3.5-turbo',
       info: 'The standard ChatGPT model'
     },
-    'gpt-4': {
+    'chat-4': {
       name: 'gpt-4',
       info: 'The GPT-4 model'
     },
