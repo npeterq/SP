@@ -1,9 +1,7 @@
 <template>
   <div v-show="!pageLoading" style="display: none">
     <div class="page-title">
-      <h1 class="text-center mb-4"><img src="https://emojicdn.elk.sh/%F0%9F%A4%96" alt="" style="height: 2.5rem"></h1>
-      <p style="text-align: center; font-weight: bolder; margin-top: -10px; margin-bottom: 30px; font-size: 24px">
-        DaVinci GPT</p>
+      <h1>🤖 DaVinci GPT-3</h1>
     </div>
 
     <div v-show="notFound">
@@ -26,8 +24,8 @@
             sys: item.sender === 'System'
           }">
         <div v-show="item.sender === 'Human'" style="font-size: 12px;position: absolute; top: -25px; color: #999;">Human</div>
-        <div v-if="item.sender === 'Human'" class="human" style="padding-right: 10px">
-          <pre style="padding: 0">{{ item.text }}</pre>
+        <div v-if="item.sender === 'Human'" class="human" style="padding-right: 0">
+          <pre>{{ item.text }}</pre>
         </div>
         <div v-if="item.sender === 'AI'" style="font-size: 12px; position: absolute; top: -25px; color: #999">AI</div>
         <div v-if="item.sender === 'AI'" v-html="item.displayText"></div>

@@ -6,13 +6,8 @@ const {ask, chat} = require('./openai-api.cjs')
 const verify_login = require('./verify-login.cjs')
 const port = 7009
 const path = require('path')
+const {unmarshall} = require('@aws-sdk/util-dynamodb')
 const {write_conversations, get_conversations} = require('./write-conversations.cjs')
-const {log_user_activities} = require('./log-user-activity.cjs')
-const {
-  calcTokenCost,
-  calcToken
-} = require('./price-calc.cjs')
-const jwt = require('jsonwebtoken')
 
 app.use(cors())
 app.use(express.static(path.join(__dirname, '../dist')))
@@ -22,15 +17,6 @@ function prependArray(value, array) {
   let newArray = array.slice()
   newArray.unshift(value)
   return newArray
-}
-
-function logUserActivity(data) {
-  console.log(data)
-  log_user_activities(data).then(res => {
-    console.log('Log user activity successfully')
-  }).catch(err => {
-    console.log(err)
-  })
 }
 
 const instruction = `Your name is DaVinci, and you are a large language model trained by OpenAI. Your job is to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
@@ -46,10 +32,11 @@ app.post('/api/share/get', (req, res) => {
   get_conversations({
     id
   }).then(r => {
-    if (r.history) {
+    if (r.Item) {
+      let item = unmarshall(r.Item)
       res.json({
         success: true,
-        messages: r.history
+        messages: item.history
       })
     } else {
       res.json({
@@ -91,8 +78,7 @@ app.post('/api/share', (req, res) => {
           id
         })
       }).catch(err => {
-        console.log(err)
-        res.status(500).json({
+        res.json({
           success: false,
           message: 'Failed to write to database'
         })
@@ -104,6 +90,28 @@ app.post('/api/share', (req, res) => {
       })
     }
   }).catch(err => {
+    res.json({
+      success: false
+    })
+  })
+})
+
+// deprecated
+app.post('/api/checkLogin', function (req, res) {
+  let token = req.body.token
+  let loginValid = false
+  let userPool = req.body.userPool
+
+  verify_login(token, userPool).then(r => {
+    if (r.data.Username) {
+      loginValid = true
+    }
+
+    res.json({
+      success: loginValid
+    })
+  }).catch(err => {
+    console.log(err)
     res.json({
       success: false
     })
@@ -148,7 +156,6 @@ Here is a conversation between a human and you:
 ${composedHistory}
 Human: ${message}
 AI: `,
-          max_tokens: 1024,
           temperature: 0.5,
           top_p: 1,
           frequency_penalty: 0,
@@ -162,18 +169,6 @@ AI: `,
           }
           if (cost) {
             res.end()
-            if (loginType === 'password') {
-              let userData = jwt.decode(token)
-              let logData = {
-                username: userData.username,
-                'cognito:groups': userData['cognito:groups'] || [],
-                site: 'chat.jw1.dev',
-                type: 'chat/davinci',
-                ...cost,
-                created: Date.now()
-              }
-              logUserActivity(logData)
-            }
             return false
           }
           if (err) {
@@ -199,7 +194,7 @@ AI: `,
   })
 })
 
-app.post('/api/chat/:model', function (req, res) {
+app.post('/api/tool/:model', function (req, res) {
   res.set('Content-Type', 'application/octet-stream')
   res.set('Transfer-Encoding', 'chunked')
 
@@ -212,7 +207,7 @@ app.post('/api/chat/:model', function (req, res) {
 
   let model = req.params.model || ''
 
-  if (!model) {
+  if(!model) {
     res.status(404).end()
     return false
   }
@@ -236,8 +231,6 @@ app.post('/api/chat/:model', function (req, res) {
   if (token.split('_')[0] === 'key') {
     loginType = 'key'
   }
-
-  console.log('Login Type: ' + loginType)
 
   if (userInstruction) {
     composedHistory = prependArray({
@@ -273,18 +266,6 @@ app.post('/api/chat/:model', function (req, res) {
 
           if (cost) {
             res.end()
-            if (loginType === 'password') {
-              let userData = jwt.decode(token)
-              let logData = {
-                username: userData.username,
-                'cognito:groups': userData['cognito:groups'] || [],
-                site: 'chat.jw1.dev',
-                type: 'chat/' + model,
-                ...cost,
-                created: Date.now()
-              }
-              logUserActivity(logData)
-            }
             return false
           }
 

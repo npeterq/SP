@@ -1,17 +1,14 @@
-const {connectDB} = require('./mongo.cjs')
-
-let db
-const db_conversations = (async function () {
-  db = await connectDB()
-  return db.collection('public_conversations')
-})()
+const DB_client = require('./db.cjs')
+const db_conversations = new DB_client({
+  table: 'davinci_conversations'
+})
 
 let write_conversations = function (data) {
-  return db_conversations.then(collection => collection.insertOne(data))
+  return db_conversations.putItem(data)
 }
 
 let get_conversations = function (data) {
-  return db_conversations.then(collection => collection.findOne(data))
+  return db_conversations.getItem(data)
 }
 
 module.exports = {

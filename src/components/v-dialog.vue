@@ -4,7 +4,7 @@
       <div class="v-dialog-modal" v-if="show">
         <div class="v-dialog-wrap">
           <div class="v-dialog-box">
-            <h4 class="title mb-0">{{ title }}</h4>
+            <div class="title">{{ title }}</div>
 
             <div class="content">
               <slot></slot>

@@ -6,58 +6,18 @@
     }"
   >
     <div class="page-title">
-      <h1 class="text-center mb-4"><img src="https://emojicdn.elk.sh/%F0%9F%A4%96" alt="" style="height: 2.5rem"></h1>
-      <p style="text-align: center; font-weight: bolder; margin-top: -10px; margin-bottom: 30px; font-size: 24px">
-        DaVinci GPT</p>
+      <h1>🤖 API Tool</h1>
     </div>
+    <div v-show="!isLogin && !checkingLogin">
+      <div style="line-height: 1.9">
 
+      </div>
+    </div>
     <login v-show="!isLogin && !checkingLogin" @logged="loggedIn"></login>
     <div>
       <chat-mode @data-change="handleChatModeChange"
                  v-show="messages.length === 0 && apiMethodIndex !== 0 && isLogin && !checkingLogin"></chat-mode>
-      <div v-show="messages.length < 1 && isLogin && !checkingLogin" style="margin-bottom: 20px; font-size: 14px">
-        <p style="text-align: center">
-          🙌 Try these commands
-        </p>
-        <div style="display: flex; justify-content: center">
-          <table style="width: auto">
-            <tr>
-              <td>
-                <code>/reset</code>
-              </td>
-              <td>
-                Reset the conversation
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>/pub</code>
-              </td>
-              <td>
-                Publish the conversation
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>/regen</code>
-              </td>
-              <td>
-                Regenerate the last message
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <code>/signout</code>
-              </td>
-              <td>
-                Sign out
-              </td>
-            </tr>
-          </table>
-        </div>
-        <p class="text-xs text-center">
-          🎉 DaVinci GPT 中文版本 <a href="https://zy.jw1.dev/" target="_blank">只言</a> 上线啦！快来体验吧！
-        </p>
+      <div v-show="messages.length < 1 && isLogin && !checkingLogin" style="margin-bottom: 20px">
       </div>
       <div class="message-list" v-show="messages.length && isLogin && !checkingLogin">
         <div
@@ -69,28 +29,19 @@
             sys: item.sender === 'System'
           }"
         >
-          <div v-show="item.sender === 'Human'"
-               style="font-size: 12px;position: absolute; top: -25px; right: 10px; color: #999;">
+          <div v-show="item.sender === 'Human'" style="font-size: 12px;position: absolute; top: -25px; color: #999;">
             Human
           </div>
           <div v-if="item.sender === 'Human'" class="human">
             <div :style="{
-              opacity: editIndex === item.index ? '0' : '1',
-              pointerEvents: editIndex === item.index ? 'none' : 'auto',
-              height: editIndex === item.index ? '30px': 'auto'
+              display: editIndex === item.index ? 'none' : 'block'
             }">
-              <pre style="padding: 0">{{ item.text }}</pre>
+              <pre>{{ item.text }}</pre>
             </div>
             <div class="edit-tools" v-if="editIndex === item.index">
               <textarea
                 v-model="editMessage"
                 :id="'editingArea_' + item.index"
-                :style="{
-                  minHeight: '60px',
-                  maxHeight: '120px'
-                }"
-
-                @input="calcEditingAreaHeight('editingArea_' + item.index)"
                 @focus="inputOnFocus = true"
                 @blur="inputOnFocus = false">
               </textarea>
@@ -111,8 +62,7 @@
               </button>
             </div>
           </div>
-          <div v-show="item.sender === 'AI'"
-               style="font-size: 12px; position: absolute; top: -25px; left: 10px; color: #999">AI
+          <div v-show="item.sender === 'AI'" style="font-size: 12px; position: absolute; top: -25px; color: #999">AI
           </div>
           <div v-if="item.sender === 'AI' && item.displayText" v-html="item.displayText"></div>
           <pre style="background: transparent; padding: 0; white-space: pre-wrap; font-size: 14px"
@@ -126,16 +76,14 @@
         </div>
       </div>
       <div v-show="checkingLogin" style="padding: 20px 0 30px; text-align: center; font-size: 12px">
-        <div style="text-align: center" aria-busy="true">Checking your sign in info...</div>
-      </div>
-      <div class="in-page-token-count" v-show="messages.length > 0 && !systemInfo && isLogin">
-        In-page Tokens: {{ inPageTokens }}
+        <div style="text-align: center"><i class="iconfont spin">&#xe676;</i> Checking your sign in info...</div>
       </div>
       <div style="padding: 20px 0 30px; text-align: center; font-size: 12px" v-show="systemInfo" v-html="systemInfo">
 
       </div>
       <div style="text-align: center" v-show="isLogin && !checkingLogin" aria-label="Settings">
         <div style="display: inline-block; position: relative">
+
           <Transition name="slide-up">
             <div class="page-options-box" v-show="showPageOptions" :class="{
             in: showPageOptions
@@ -166,10 +114,11 @@
                   </button>
                 </div>
               </div>
-              <div style="text-align: center; margin-top: 10px" class="px-2">
+              <div style="text-align: center; margin-top: 10px">
                 <div class="select-box" :class="{
-                  focus: modelSelectFocus
-                }">
+            focus: modelSelectFocus
+          }">
+                  <div class="value"><i class="iconfont icon-Bot"></i> {{ apiMethod[apiMethodIndex].name }}</div>
                   <label for="model_select" class="for-select"></label>
                   <select id="model_select" v-model="apiMethodIndex" @focus="modelSelectFocus = true"
                           @blur="modelSelectFocus = false">
@@ -181,26 +130,27 @@
               </div>
             </div>
           </Transition>
-          <button class="mb-0" role="menuitem" @click.stop="showPageOptions = !showPageOptions" aria-haspopup="true"
+          <button role="menuitem" @click.stop="showPageOptions = !showPageOptions" aria-haspopup="true"
                   style="position: relative; z-index: 300">
-            <i class="iconfont icon-setting" style="top: 0; margin-right: 5px" v-show="!showPageOptions"></i>
-            <i class="iconfont icon-close-bold" style="top: 0; margin-right: 5px" v-show="showPageOptions"></i>Settings
+            <i class="iconfont icon-setting" style="top: 2px" v-show="!showPageOptions"></i>
+            <i class="iconfont icon-close-bold" style="top: 2px" v-show="showPageOptions"></i>Settings
           </button>
         </div>
       </div>
 
       <div v-show="shareLink && isLogin && !checkingLogin"
            style="padding: 10px 0; font-size: 12px; text-align: center;">
-        <a :href="shareLink">{{ shareLink }}</a>
+        <a :href="shareLink" target="_blank">{{ shareLink }}</a>
       </div>
       <div v-show="isLogin" class="page-input">
         <div class="wrap">
           <textarea class="input"
                     v-model="userInput"
-                    @focus="inputOnFocus = true; showPageOptions = false; editIndex = undefined"
+                    :contenteditable="!editIndex"
+                    @focus="inputOnFocus = true; showPageOptions = false"
                     @blur="inputOnFocus = false"
                     ref="input"
-                    placeholder="Type your message or command here, press CTRL/CMD + Enter to send."
+                    placeholder="Type your message here, press CTRL/CMD + Enter to send."
                     @compositionstart="userIsComposting = true"
                     @compositionend="userIsComposting = false">
           </textarea>
@@ -227,7 +177,7 @@ import hljs from 'highlight.js/lib/common'
 import xss from 'xss'
 import Markdownit from 'markdown-it'
 import ClipboardJS from 'clipboard'
-import {calcToken, calcTokenCost} from './utils/price-calc.js'
+import {calcTokenCost, calcToken} from './utils/price-calc.js'
 import ChatMode from './components/chat-mode.vue'
 
 let md = new Markdownit({
@@ -290,7 +240,6 @@ export default {
   },
   data() {
     return {
-      inPageTokens: 0,
       userScrolled: false,
       userInteracted: false,
       editInstructionWindow: '',
@@ -303,16 +252,15 @@ export default {
           url: '/ask'
         },
         {
-          name: 'ChatGPT',
+          name: '3.5T',
           model: 'gpt-3.5-turbo',
-          url: '/chat/chat-gpt'
+          url: '/tool/GET'
+        },
+        {
+          name: 'G48',
+          model: 'gpt-4',
+          url: '/tool/POST'
         }
-        // {
-        //   name: 'GPT-4 8k',
-        //   model: 'gpt-4',
-        //   url: '/chat/gpt-4',
-        //   disabled: true
-        // },
         // {
         //   name: 'GPT-4 32k',
         //   model: 'gpt-4-32k',
@@ -347,25 +295,6 @@ export default {
     }
   },
   methods: {
-    calcInPageTokens() {
-      let _ = this
-      _.inPageTokens = 0
-      let instructionTokenCount = _.chatMode.instructionTokens || 0
-      _.inPageTokens += instructionTokenCount
-      _.messages.forEach((message) => {
-        if (message.sender === 'Human') {
-          let messageWithPrefixAndSuffix = (_.chatMode.prefix || '') + message.text + (_.chatMode.suffix || '')
-          let tokenCountForMessage = calcToken(messageWithPrefixAndSuffix)
-          _.inPageTokens += tokenCountForMessage
-        } else {
-          _.inPageTokens += calcToken(message.text)
-        }
-      })
-    },
-    calcEditingAreaHeight(id) {
-      let el = document.getElementById(id)
-      el.rows = el.value.split('\n').length
-    },
     handleUserInteract() {
       let touchDown = false
       let _ = this
@@ -394,11 +323,13 @@ export default {
         touchDown = false
       })
 
-      let checkScroll = function () {
+      function checkScroll() {
         let target = document.querySelector('html')
         let scrollTop = target.scrollTop
         let scrollHeight = target.scrollHeight
         let height = target.clientHeight
+
+        console.log(scrollTop + height, scrollHeight - 3)
 
         if (scrollTop + height > scrollHeight - 3) {
           _.userInteracted = false
@@ -422,7 +353,6 @@ export default {
         noHistory: false
       }
       this.chatMode = {...defaultChatMode, ...chatMode}
-      this.calcInPageTokens()
     },
     initClipboard() {
       let cp = new ClipboardJS('.copy-code-btn', {
@@ -504,7 +434,7 @@ export default {
 
       this.showPageOptions = false
 
-      this.systemInfo = '<div style="text-align: center" aria-busy="true">Signing you out ...</div>'
+      this.systemInfo = '<div style="text-align: center"><i class="iconfont spin">&#xe676;</i> Signing you out ...</div>'
       this.scrollDown()
 
       axios({
@@ -530,7 +460,6 @@ export default {
       }
     },
     share() {
-      let _ = this
       if (this.messages.length < 1) {
         alert('Please ask something first.')
         return false
@@ -556,11 +485,6 @@ export default {
         this.shareLink = window.location.origin + '/s.html?id=' + res.data.id
         localStorage.setItem('shareLink', this.shareLink)
         this.scrollDown()
-      }).catch(e => {
-        console.log(e)
-        _.systemInfo = '<div style="text-align: center">Error occurred while sharing, please refresh this page and try again.</div>'
-        _.scrollDown()
-        return false
       })
     },
     clearHistory() {
@@ -603,7 +527,6 @@ export default {
       }
 
       this.messages = history
-      _.calcInPageTokens()
       if (this.messages.length) {
         this.scrollDown()
         this.initClipboard()
@@ -695,7 +618,6 @@ export default {
 
         if (e.key === 'Escape') {
           _.showPageOptions = false
-          _.editIndex = undefined
         }
       })
     },
@@ -780,7 +702,6 @@ export default {
           _.$refs.input.innerText = ''
         }, 30)
         _.clearHistory()
-        _.calcInPageTokens()
         return false
       }
 
@@ -829,7 +750,7 @@ export default {
 
       _.saveHistory()
 
-      _.systemInfo = '<div style="text-align: center" aria-busy="true">Processing...</div>'
+      _.systemInfo = '<div style="text-align: center"><i class="iconfont spin">&#xe676;</i> Processing...</div>'
 
       _.shareLink = ''
       localStorage.removeItem('shareLink')
@@ -847,7 +768,6 @@ export default {
       }, 30)
 
       this.updateDisplayMessages()
-      this.calcInPageTokens()
 
       let tempHistory = JSON.parse(JSON.stringify(_.messages))
       tempHistory.splice(-1, 1)
@@ -856,7 +776,7 @@ export default {
         token: localStorage.getItem(`CognitoIdentityServiceProvider.${USER_POOL_CLIENT_ID}.${localStorage.getItem('username_from_sso')}.accessToken`) || localStorage.getItem('fromID'),
         userPool: USER_POOL_ID,
         clientID: USER_POOL_CLIENT_ID,
-        message: (_.chatMode.prefix || '') + userInput + (_.chatMode.suffix || ''),
+        message: _.chatMode.prefix + userInput + _.chatMode.suffix,
         history: _.chatMode.noHistory ? [] : tempHistory,
         instructions: _.chatMode.instructions
       }
@@ -917,7 +837,6 @@ export default {
                 _.scrollDown(true)
                 _.saveHistory()
                 _.updateDisplayMessages()
-                _.calcInPageTokens()
                 _.streamTimeout = false
                 _.$refs.input.focus()
                 if (_.streamTimeoutCount) {

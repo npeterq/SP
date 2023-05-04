@@ -38,6 +38,9 @@ let modelName = function (index) {
     case 1:
       name = 'chat-gpt'
       break
+    case 2:
+      name = 'gpt-4'
+    break
   }
   return name
 }
