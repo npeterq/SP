@@ -3,7 +3,6 @@ const cors = require('cors')
 const app = express()
 const {nanoid} = require('nanoid')
 const {ask, chat} = require('./openai-api.cjs')
-const verify_login = require('./verify-login.cjs')
 const port = 7009
 const path = require('path')
 const {unmarshall} = require('@aws-sdk/util-dynamodb')
@@ -50,73 +49,7 @@ app.post('/api/share/get', (req, res) => {
       message: 'Failed to get conversation'
     })
   })
-})
-
-app.post('/api/share', (req, res) => {
-  let history_data = req.body.history
-  let id = nanoid()
-  let token = req.body.token
-  let userPool = req.body.userPool
-
-  let loginValid = false
-
-  verify_login(token, userPool).then(r => {
-    if (r.data.Username) {
-      loginValid = true
-    }
-
-    if (loginValid) {
-      write_conversations({
-        id,
-        created: Date.now(),
-        userName: r.data.Username,
-        history: history_data
-      }).then(r_2 => {
-        console.log('Write to database successfully')
-        res.json({
-          success: true,
-          id
-        })
-      }).catch(err => {
-        res.json({
-          success: false,
-          message: 'Failed to write to database'
-        })
-      })
-    } else {
-      res.json({
-        success: false,
-        message: 'Login expired'
-      })
-    }
-  }).catch(err => {
-    res.json({
-      success: false
-    })
-  })
-})
-
-// deprecated
-app.post('/api/checkLogin', function (req, res) {
-  let token = req.body.token
-  let loginValid = false
-  let userPool = req.body.userPool
-
-  verify_login(token, userPool).then(r => {
-    if (r.data.Username) {
-      loginValid = true
-    }
-
-    res.json({
-      success: loginValid
-    })
-  }).catch(err => {
-    console.log(err)
-    res.json({
-      success: false
-    })
-  })
-})
+});
 
 app.post('/api/ask', function (req, res) {
   res.set('Content-Type', 'application/octet-stream')
@@ -145,53 +78,42 @@ app.post('/api/ask', function (req, res) {
     loginType = 'key'
   }
 
-  verify_login(token, userPool).then(r => {
-    if (r.data.Username) {
-      ask(
-        'davinci',
-        {
-          prompt: instruction + `
+  ask(
+    'davinci',
+    {
+      prompt: instruction + `
 Here is a conversation between a human and you:
 
 ${composedHistory}
 Human: ${message}
 AI: `,
-          temperature: 0.5,
-          top_p: 1,
-          frequency_penalty: 0,
-          presence_penalty: 0.6,
-          stream: true,
-          key: loginType === 'key' ? token.split('_')[1] : false
-        },
-        function (text, cost, err) {
-          if (text) {
-            res.write(Buffer.from(text))
-          }
-          if (cost) {
-            res.end()
-            return false
-          }
-          if (err) {
-            console.log(err)
-            if (err.response && err.response.status === 429) {
-              res.status(429)
-            } else {
-              res.status(500)
-            }
-            res.end()
-            return false
-          }
+      temperature: 0.5,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0.6,
+      stream: true,
+      key: loginType === 'key' ? token.split('_')[1] : false
+    },
+    function (text, cost, err) {
+      if (text) {
+        res.write(Buffer.from(text))
+      }
+      if (cost) {
+        res.end()
+        return false
+      }
+      if (err) {
+        console.log(err)
+        if (err.response && err.response.status === 429) {
+          res.status(429)
+        } else {
+          res.status(500)
         }
-      )
-    } else {
-      res.write(Buffer.from('Seems like you are not authenticated, try refresh the page! 🥲'))
-      res.end()
+        res.end()
+        return false
+      }
     }
-  }).catch(err => {
-    console.log(err)
-    res.status(401)
-    res.end()
-  })
+  )
 })
 
 app.post('/api/tool/:model', function (req, res) {
@@ -239,59 +161,48 @@ app.post('/api/tool/:model', function (req, res) {
     }, composedHistory)
   }
 
-  verify_login(token, userPool).then(r => {
-    if (r.data.Username) {
-      chat(
-        model,
+  chat(
+    model,
+    {
+      messages: [
+        ...composedHistory,
         {
-          messages: [
-            ...composedHistory,
-            {
-              role: 'user',
-              content: message
-            }
-          ],
-          temperature: 0.6,
-          top_p: 1,
-          frequency_penalty: 0,
-          presence_penalty: 0.6,
-          stream: true,
-          key: loginType === 'key' ? token.split('_')[1] : false
-        },
-        function (text, cost, err) {
-
-          if (text) {
-            res.write(Buffer.from(text))
-          }
-
-          if (cost) {
-            res.end()
-            return false
-          }
-
-          if (err) {
-            console.log(err)
-            if (err.response && err.response.status === 429) {
-              res.status(429)
-            } else {
-              res.status(500)
-            }
-            res.end()
-            return false
-          }
+          role: 'user',
+          content: message
         }
-      )
-    } else {
-      res.status(401)
-      res.end()
+      ],
+      temperature: 0.6,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0.6,
+      stream: true,
+      key: loginType === 'key' ? token.split('_')[1] : false
+    },
+    function (text, cost, err) {
+
+      if (text) {
+        res.write(Buffer.from(text))
+      }
+
+      if (cost) {
+        res.end()
+        return false
+      }
+
+      if (err) {
+        console.log(err)
+        if (err.response && err.response.status === 429) {
+          res.status(429)
+        } else {
+          res.status(500)
+        }
+        res.end()
+        return false
+      }
     }
-  }).catch(err => {
-    console.log(err)
-    res.status(err.response.status)
-    res.end()
-  })
+  )
 })
 
 app.listen(port, () => {
-  console.log(`DaVinci GPT-3 is now listening on port ${port}`)
+  console.log(`DaVinci is now listening on port ${port}`)
 })
